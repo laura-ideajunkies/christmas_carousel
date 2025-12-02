@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Junkies Advent Carousel Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --gold: #F2B441;
+            --coral-pink: #F24968;
+            --warm-gray: #6b7280;
+            --charcoal: #1a1a2e;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: var(--white);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        
+        .header {
+            border-bottom: 1px solid #222;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .header h1 span {
+            background: linear-gradient(135deg, var(--gold), var(--coral-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            background: #111;
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+            width: fit-content;
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            background: #222;
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            color: #ccc;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        
+        .panel {
+            background: #111;
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .panel-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 0.375rem;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 0.875rem;
+            font-family: inherit;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--coral-pink));
+            color: black;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.02);
+        }
+        
+        .btn-secondary {
+            background: #222;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #333;
+        }
+        
+        .btn-small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-danger {
+            background: rgba(220, 38, 38, 0.2);
+            color: #f87171;
+        }
+        
+        .cta-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .cta-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .cta-option:hover {
+            background: #1a1a1a;
+        }
+        
+        .cta-option.selected {
+            background: #1a1a1a;
+            outline: 1px solid rgba(242, 180, 65, 0.5);
+        }
+        
+        .cta-option input {
+            width: auto;
+            margin-top: 0.125rem;
+        }
+        
+        .cta-option-text {
+            flex: 1;
+        }
+        
+        .cta-option-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .cta-option-desc {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        /* Slide Preview */
+        .slide-preview-container {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .slide-preview {
+            aspect-ratio: 4/5;
+            background: black;
+            border-radius: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-preview::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at top right, rgba(242, 73, 104, 0.08) 0%, transparent 50%);
+        }
+        
+        .slide-content {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+        
+        .slide-content.center {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .slide-content.left {
+            justify-content: center;
+        }
+        
+        .slide-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--gold), var(--coral-pink));
+            border-radius: 2rem;
+            font-size: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: black;
+            margin-bottom: 1rem;
+        }
+        
+        .slide-headline {
+            font-size: 1.125rem;
+            font-weight: 300;
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+        }
+        
+        .slide-headline.bold {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .slide-subhead {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.65);
+        }
+        
+        .slide-body {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.8);
+            white-space: pre-line;
+            line-height: 1.5;
+        }
+        
+        .slide-accent {
+            width: 3rem;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--coral-pink));
+            border-radius: 2px;
+            margin-bottom: 1rem;
+        }
+        
+        .slide-accent.bottom {
+            position: absolute;
+            bottom: 1.25rem;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .slide-cta-btn {
+            display: inline-block;
+            padding: 0.625rem 1.25rem;
+            background: linear-gradient(135deg, var(--gold), var(--coral-pink));
+            border-radius: 2rem;
+            font-size: 0.625rem;
+            font-weight: 700;
+            color: black;
+            margin-top: 1rem;
+        }
+        
+        .slide-footer {
+            position: absolute;
+            bottom: 0.875rem;
+            font-size: 0.5rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            color: var(--warm-gray);
+        }
+        
+        .slide-footer.center {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .slide-footer.right {
+            right: 1rem;
+        }
+        
+        .slide-num {
+            font-size: 0.625rem;
+            font-weight: 500;
+            color: var(--warm-gray);
+        }
+        
+        /* Slide Navigation */
+        .slide-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .slide-nav-arrows {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .slide-nav-btn {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #222;
+            border: none;
+            border-radius: 0.375rem;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .slide-nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .slide-thumbs {
+            display: flex;
+            gap: 0.375rem;
+            overflow-x: auto;
+            padding: 0.75rem 0;
+            margin-top: 1rem;
+        }
+        
+        .slide-thumb {
+            flex-shrink: 0;
+            width: 2.5rem;
+            aspect-ratio: 4/5;
+            background: #222;
+            border: 2px solid transparent;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.625rem;
+            color: #666;
+        }
+        
+        .slide-thumb.active {
+            border-color: var(--gold);
+        }
+        
+        /* Post Copy Tab */
+        .post-preview {
+            background: #111;
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .post-avatar {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--coral-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: black;
+        }
+        
+        .post-meta {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .post-meta span {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: #666;
+        }
+        
+        .post-text {
+            font-size: 0.875rem;
+            color: #ccc;
+            white-space: pre-line;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .post-actions {
+            display: flex;
+            gap: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #222;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .char-count {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .format-toolbar {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #0a0a0a;
+            border-radius: 0.5rem;
+            border: 1px solid #333;
+        }
+        
+        .format-btn {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 0.25rem;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: inherit;
+        }
+        
+        .format-btn:hover {
+            background: #222;
+            color: white;
+        }
+        
+        .format-btn.bold { font-weight: bold; }
+        .format-btn.italic { font-style: italic; }
+        .format-btn.underline { text-decoration: underline; }
+        
+        .format-help {
+            font-size: 0.625rem;
+            color: #555;
+            margin-top: 0.375rem;
+        }
+        
+        .design-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .design-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+        }
+        
+        .design-option:hover {
+            background: #1a1a1a;
+        }
+        
+        .design-option.selected {
+            background: #1a1a1a;
+            outline: 1px solid rgba(242, 180, 65, 0.5);
+        }
+        
+        .design-option input {
+            display: none;
+        }
+        
+        .design-preview {
+            width: 40px;
+            height: 50px;
+            background: #000;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .design-preview-black {
+            background: #000;
+        }
+        .design-preview-black::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--coral-pink));
+        }
+        
+        .design-preview-charcoal {
+            background: #2c3e50;
+        }
+        .design-preview-charcoal::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--coral-pink));
+        }
+        
+        .design-preview-gold {
+            background: var(--gold);
+        }
+        .design-preview-gold::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 10px;
+            background: #000;
+            border-radius: 2px;
+        }
+        
+        .design-preview-coral {
+            background: var(--coral-pink);
+        }
+        .design-preview-coral::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 10px;
+            background: #000;
+            border-radius: 2px;
+        }
+        
+        .design-preview-gradient {
+            background: linear-gradient(135deg, var(--gold), var(--coral-pink));
+        }
+        .design-preview-gradient::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 10px;
+            background: #000;
+            border-radius: 2px;
+        }
+        
+        .design-preview-glass {
+            background: #000;
+        }
+        .design-preview-glass::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 35px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+        }
+        
+        .design-option-text {
+            flex: 1;
+        }
+        
+        .design-option-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .design-option-desc {
+            font-size: 0.625rem;
+            color: #666;
+        }
+        
+        .status-msg {
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--gold);
+        }
+        
+        .hidden { display: none !important; }
+        
+        .mt-4 { margin-top: 1rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .text-muted { color: #666; }
+        .w-full { width: 100%; }
+        .flex { display: flex; }
+        .gap-2 { gap: 0.5rem; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>✨ <span>AI Junkies</span> Advent Generator</h1>
+        <button class="btn btn-secondary" onclick="regenerateAll()">🔄 Regenerate</button>
+    </header>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('input')">1. Input</button>
+            <button class="tab" onclick="showTab('slides')">2. Edit Slides</button>
+            <button class="tab" onclick="showTab('post')">3. Post Copy</button>
+        </div>
+        
+        <!-- INPUT TAB -->
+        <div id="tab-input" class="tab-content">
+            <div class="grid">
+                <div>
+                    <div class="panel mb-4">
+                        <h2 class="panel-title">Basic Info</h2>
+                        <div class="row">
+                            <div class="form-group">
+                                <label>Day Number</label>
+                                <input type="text" id="input-day" placeholder="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Magic Word</label>
+                                <input type="text" id="input-magic" placeholder="PROMPT" oninput="this.value = this.value.toUpperCase()">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Topic / Title</label>
+                            <input type="text" id="input-topic" placeholder="e.g. LinkedIn Competitor Analysis">
+                        </div>
+                        <div class="form-group">
+                            <label>Hook Line</label>
+                            <input type="text" id="input-hook" placeholder="e.g. See yourself the way your competitors see you">
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2 class="panel-title">The Prompt</h2>
+                        <div class="form-group">
+                            <label>Full Prompt Content</label>
+                            <textarea id="input-prompt" rows="8" placeholder="Paste the full prompt here. Use bullet points starting with - for items you want displayed as a list.
+
+Example:
+I want to analyse X. Look at:
+
+- First thing
+- Second thing
+- Third thing
+
+Then give me a report."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Extra Tips / Notes (separate with blank lines)</label>
+                            <textarea id="input-tips" rows="4" placeholder="Add tips for using the prompt here.
+
+Separate different tips with a blank line and they'll appear on separate slides."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="panel mb-4">
+                        <h2 class="panel-title">Design Style</h2>
+                        <div class="design-options">
+                            <label class="design-option selected" onclick="selectDesign(this, 'black')">
+                                <input type="radio" name="design" value="black" checked>
+                                <div class="design-preview design-preview-black"></div>
+                                <div class="design-option-text">
+                                    <div class="design-option-title">Black</div>
+                                    <div class="design-option-desc">Pure black</div>
+                                </div>
+                            </label>
+                            <label class="design-option" onclick="selectDesign(this, 'charcoal')">
+                                <input type="radio" name="design" value="charcoal">
+                                <div class="design-preview design-preview-charcoal"></div>
+                                <div class="design-option-text">
+                                    <div class="design-option-title">Charcoal</div>
+                                    <div class="design-option-desc">Dark grey</div>
+                                </div>
+                            </label>
+                            <label class="design-option" onclick="selectDesign(this, 'gold')">
+                                <input type="radio" name="design" value="gold">
+                                <div class="design-preview design-preview-gold"></div>
+                                <div class="design-option-text">
+                                    <div class="design-option-title">Gold</div>
+                                    <div class="design-option-desc">Gold background</div>
+                                </div>
+                            </label>
+                            <label class="design-option" onclick="selectDesign(this, 'coral')">
+                                <input type="radio" name="design" value="coral">
+                                <div class="design-preview design-preview-coral"></div>
+                                <div class="design-option-text">
+                                    <div class="design-option-title">Coral</div>
+                                    <div class="design-option-desc">Coral-pink background</div>
+                                </div>
+                            </label>
+                            <label class="design-option" onclick="selectDesign(this, 'gradient')">
+                                <input type="radio" name="design" value="gradient">
+                                <div class="design-preview design-preview-gradient"></div>
+                                <div class="design-option-text">
+                                    <div class="design-option-title">Gradient</div>
+                                    <div class="design-option-desc">Gold to coral</div>
+                                </div>
+                            </label>
+                            <label class="design-option" onclick="selectDesign(this, 'glass')">
+                                <input type="radio" name="design" value="glass">
+                                <div class="design-preview design-preview-glass"></div>
+                                <div class="design-option-text">
+                                    <div class="design-option-title">Glass</div>
+                                    <div class="design-option-desc">Glassmorphism</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="panel mb-4">
+                        <h2 class="panel-title">CTA Type</h2>
+                        <div class="cta-options">
+                            <label class="cta-option selected" onclick="selectCTA(this, 'comment_word')">
+                                <input type="radio" name="cta" value="comment_word" checked>
+                                <div class="cta-option-text">
+                                    <div class="cta-option-title">Comment word</div>
+                                    <div class="cta-option-desc">Drop [WORD] to get the prompt</div>
+                                </div>
+                            </label>
+                            <label class="cta-option" onclick="selectCTA(this, 'engagement')">
+                                <input type="radio" name="cta" value="engagement">
+                                <div class="cta-option-text">
+                                    <div class="cta-option-title">Engagement question</div>
+                                    <div class="cta-option-desc">Spark discussion</div>
+                                </div>
+                            </label>
+                            <label class="cta-option" onclick="selectCTA(this, 'save_soft')">
+                                <input type="radio" name="cta" value="save_soft">
+                                <div class="cta-option-text">
+                                    <div class="cta-option-title">Save this + soft pitch</div>
+                                    <div class="cta-option-desc">Generous, builds goodwill</div>
+                                </div>
+                            </label>
+                            <label class="cta-option" onclick="selectCTA(this, 'poll')">
+                                <input type="radio" name="cta" value="poll">
+                                <div class="cta-option-text">
+                                    <div class="cta-option-title">Poll suggestion</div>
+                                    <div class="cta-option-desc">Interactive, algorithm-friendly</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary w-full mb-4" onclick="regenerateAll()">
+                        ✨ Generate Carousel + Post
+                    </button>
+                    
+                    <div class="panel">
+                        <h2 class="panel-title">Preview</h2>
+                        <div class="slide-preview-container">
+                            <div id="preview-thumb" class="slide-preview"></div>
+                        </div>
+                        <p class="text-xs text-muted text-center mt-4"><span id="slide-count">10</span> slides generated</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SLIDES TAB -->
+        <div id="tab-slides" class="tab-content hidden">
+            <div class="grid">
+                <div>
+                    <div class="slide-nav">
+                        <span class="text-sm text-muted">Preview</span>
+                        <div class="slide-nav-arrows">
+                            <button class="slide-nav-btn" onclick="prevSlide()">◀</button>
+                            <span class="text-sm" id="slide-indicator">1 / 10</span>
+                            <button class="slide-nav-btn" onclick="nextSlide()">▶</button>
+                        </div>
+                    </div>
+                    <div class="slide-preview-container">
+                        <div id="slide-preview-main" class="slide-preview"></div>
+                    </div>
+                    <div class="slide-thumbs" id="slide-thumbs"></div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm text-muted">Edit Slide <span id="edit-slide-num">1</span></span>
+                        <div class="flex gap-2">
+                            <button class="btn btn-secondary btn-small" onclick="addSlide()">+ Add</button>
+                            <button class="btn btn-danger btn-small" id="btn-remove" onclick="removeSlide()">🗑 Remove</button>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="form-group">
+                            <label>Slide Type</label>
+                            <select id="edit-type" onchange="updateSlideType()">
+                                <option value="title">Title Slide</option>
+                                <option value="content">Content Slide</option>
+                                <option value="cta">Call to Action</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="edit-day-group">
+                            <label>Day Number</label>
+                            <input type="text" id="edit-day" oninput="updateSlideField('day')">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Headline</label>
+                            <input type="text" id="edit-headline" oninput="updateSlideField('headline')">
+                        </div>
+                        
+                        <div class="form-group" id="edit-subhead-group">
+                            <label>Subhead</label>
+                            <input type="text" id="edit-subhead" oninput="updateSlideField('subhead')">
+                        </div>
+                        
+                        <div class="form-group" id="edit-body-group">
+                            <label>Body Text</label>
+                            <div class="format-toolbar">
+                                <button type="button" class="format-btn bold" onclick="insertFormat('**', '**')" title="Bold">B</button>
+                                <button type="button" class="format-btn italic" onclick="insertFormat('*', '*')" title="Italic">I</button>
+                                <button type="button" class="format-btn underline" onclick="insertFormat('__', '__')" title="Underline">U</button>
+                                <button type="button" class="format-btn" onclick="insertFormat('• ', '')" title="Bullet point">•</button>
+                            </div>
+                            <textarea id="edit-body" rows="5" oninput="updateSlideField('body')"></textarea>
+                            <div class="format-help">**bold** · *italic* · __underline__ · • bullet</div>
+                        </div>
+                        
+                        <div class="form-group" id="edit-cta-group">
+                            <label>Button Text</label>
+                            <input type="text" id="edit-cta" oninput="updateSlideField('cta')">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary w-full mt-4" onclick="downloadPDF()">
+                        📄 Download Carousel PDF
+                    </button>
+                    <p id="download-status" class="status-msg"></p>
+                    <p class="text-xs text-muted text-center mt-4"><span id="slide-count-2">10</span> slides at 1080×1350px • Ready for LinkedIn</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- POST TAB -->
+        <div id="tab-post" class="tab-content hidden">
+            <div class="grid">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm text-muted">LinkedIn Post Copy</span>
+                        <button class="btn btn-secondary btn-small" onclick="regeneratePost()">🔄 Regenerate</button>
+                    </div>
+                    <div class="panel">
+                        <textarea id="post-copy" rows="20" oninput="updateCharCount()"></textarea>
+                        <div class="flex justify-between items-center mt-4" style="padding-top: 1rem; border-top: 1px solid #222;">
+                            <span class="char-count"><span id="char-count">0</span> characters</span>
+                            <button class="btn btn-primary btn-small" onclick="copyPost()">📋 Copy</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="mb-4"><span class="text-sm text-muted">Post Preview</span></div>
+                    <div class="post-preview">
+                        <div class="post-header">
+                            <div class="post-avatar">IJ</div>
+                            <div class="post-meta">
+                                Idea Junkies
+                                <span>Strategic AI Consultancy • 1h</span>
+                            </div>
+                        </div>
+                        <div class="post-text" id="post-preview-text"></div>
+                        <div class="slide-preview-container" style="max-width: 200px;">
+                            <div id="post-slide-preview" class="slide-preview"></div>
+                        </div>
+                        <div class="post-actions">
+                            <span>👍 Like</span>
+                            <span>💬 Comment</span>
+                            <span>🔄 Repost</span>
+                            <span>📤 Send</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Brand colors
+        const BRAND = {
+            black: '#000000',
+            white: '#ffffff',
+            gold: '#F2B441',
+            coralPink: '#F24968',
+            warmGray: '#6b7280',
+        };
+        
+        // State
+        let slides = [];
+        let currentSlide = 0;
+        let ctaType = 'comment_word';
+        let designStyle = 'black';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            regenerateAll();
+        });
+        
+        // Tab switching
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            if (tabId === 'slides') {
+                renderSlideEditor();
+            } else if (tabId === 'post') {
+                updatePostPreview();
+            }
+        }
+        
+        // Design selection
+        function selectDesign(el, style) {
+            document.querySelectorAll('.design-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            designStyle = style;
+            renderPreviewThumb();
+            if (!document.getElementById('tab-slides').classList.contains('hidden')) {
+                renderSlideEditor();
+            }
+        }
+        
+        // CTA selection
+        function selectCTA(el, type) {
+            document.querySelectorAll('.cta-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            ctaType = type;
+        }
+        
+        // Generate slides from input
+        function generateSlides() {
+            const day = document.getElementById('input-day').value || '1';
+            const topic = document.getElementById('input-topic').value || 'Your Topic Here';
+            const hook = document.getElementById('input-hook').value || 'Your hook line here';
+            const prompt = document.getElementById('input-prompt').value || '';
+            const tips = document.getElementById('input-tips').value || '';
+            const magic = document.getElementById('input-magic').value || 'PROMPT';
+            
+            slides = [];
+            
+            // Title slide
+            slides.push({ type: 'title', day, headline: topic, subhead: hook });
+            
+            // Hook slide - only if we have content
+            if (prompt) {
+                slides.push({ type: 'content', headline: 'What if you could...', body: 'Edit this hook slide to match your prompt.' });
+                slides.push({ type: 'content', headline: 'Use this prompt to...', body: 'Describe what the prompt does.' });
+                slides.push({ type: 'content', headline: 'The Prompt:', body: 'Add the opening line of your prompt here.' });
+                
+                // Parse bullet points
+                const bullets = prompt.split('\n').filter(line => line.trim().startsWith('-'));
+                if (bullets.length > 0) {
+                    slides.push({ 
+                        type: 'content', 
+                        headline: 'Ask AI to:', 
+                        body: bullets.map(line => '•' + line.substring(line.indexOf('-') + 1)).join('\n') 
+                    });
+                }
+                
+                slides.push({ type: 'content', headline: 'Include this:', body: 'Add any additional instructions here.' });
+            } else {
+                // Placeholder slides when no prompt entered
+                slides.push({ type: 'content', headline: 'Add your prompt content', body: 'Fill in the prompt field to generate slides.' });
+            }
+            
+            // Tips
+            if (tips) {
+                const tipParts = tips.split('\n\n').filter(t => t.trim());
+                if (tipParts[0]) slides.push({ type: 'content', headline: 'Pro tip', body: tipParts[0] });
+                if (tipParts[1]) slides.push({ type: 'content', headline: 'No paid account?', body: tipParts[1] });
+            }
+            
+            // Tension slide
+            slides.push({ type: 'content', headline: 'The uncomfortable truth?', body: 'Add a compelling reason to use this prompt.' });
+            
+            // CTA slide
+            let ctaHeadline = 'Want the full prompt?';
+            let ctaBody = '';
+            let ctaButton = '';
+            
+            if (ctaType === 'comment_word') {
+                ctaBody = `Drop "${magic}" in the comments.\n\nI'll send you the copy-paste version.`;
+                ctaButton = `Comment ${magic} 👇`;
+            } else if (ctaType === 'engagement') {
+                ctaHeadline = "Here's my question for you:";
+                ctaBody = 'Have you ever Googled yourself to see what comes up?\n\nBe honest 👇';
+                ctaButton = 'Tell me below';
+            } else if (ctaType === 'save_soft') {
+                ctaHeadline = 'Save this for later';
+                ctaBody = 'Full prompt + 23 more AI tools dropping daily.\n\nJoin AI Junkies (free) to get them all.';
+                ctaButton = 'Link in comments 👇';
+            } else if (ctaType === 'poll') {
+                ctaHeadline = 'Quick poll:';
+                ctaBody = 'How often do you audit your own LinkedIn presence?';
+                ctaButton = 'Vote below 👇';
+            }
+            
+            slides.push({ type: 'cta', headline: ctaHeadline, body: ctaBody, cta: ctaButton });
+            
+            currentSlide = 0;
+            updateSlideCounts();
+        }
+        
+        // Generate post copy
+        function generatePostCopy() {
+            const day = document.getElementById('input-day').value || '1';
+            const magic = document.getElementById('input-magic').value || 'PROMPT';
+            const topic = document.getElementById('input-topic').value || 'Your Topic Here';
+            
+            let post = `[Opening hook - 2 lines that grab attention]
+
+Day ${day} of the AI Junkies Advent Calendar:
+${topic}
+
+What you'll discover:
+→ Benefit one
+→ Benefit two
+→ Benefit three
+→ Benefit four
+
+Works with ChatGPT, Claude, or any AI with web search.
+Paid accounts get deeper insights, but free works too.
+
+`;
+            
+            if (ctaType === 'comment_word') {
+                post += `Want the full copy-paste prompt?\n\nDrop "${magic}" in the comments and I'll send it over.`;
+            } else if (ctaType === 'engagement') {
+                post += `Genuine question:\n\nWhen was the last time you actually audited your own LinkedIn presence?\n\nBe honest 👇`;
+            } else if (ctaType === 'save_soft') {
+                post += `Save this post for when you're ready to try it.\n\nAnd if you want 23 more prompts like this delivered daily, join AI Junkies – link in comments.`;
+            } else if (ctaType === 'poll') {
+                post += `I'm curious:\n\nHow often do you actually look at your LinkedIn profile from an outsider's perspective?\n\n(Poll below)`;
+            }
+            
+            document.getElementById('post-copy').value = post;
+            updateCharCount();
+            updatePostPreview();
+        }
+        
+        // Regenerate everything
+        function regenerateAll() {
+            generateSlides();
+            generatePostCopy();
+            renderPreviewThumb();
+            if (!document.getElementById('tab-slides').classList.contains('hidden')) {
+                renderSlideEditor();
+            }
+        }
+        
+        function regeneratePost() {
+            generatePostCopy();
+        }
+        
+        // Render slide preview HTML
+        function renderSlideHTML(slide, index, container) {
+            const formattedBody = formatTextToHTML(slide.body);
+            let html = '';
+            
+            // Get colours based on design
+            const colors = getDesignColors(designStyle);
+            const bgStyle = `background: ${colors.bg};`;
+            const textStyle = `color: ${colors.text};`;
+            const mutedStyle = `color: ${colors.muted};`;
+            
+            if (slide.type === 'title') {
+                html = renderTitleSlideHTML(slide, colors);
+            } else if (slide.type === 'cta') {
+                html = renderCtaSlideHTML(slide, formattedBody, colors);
+            } else {
+                html = renderContentSlideHTML(slide, index, formattedBody, colors);
+            }
+            
+            container.innerHTML = html;
+            container.style.background = colors.bg;
+        }
+        
+        function getDesignColors(design) {
+            switch(design) {
+                case 'charcoal':
+                    return { bg: '#2c3e50', text: '#ffffff', muted: 'rgba(255,255,255,0.65)', accent: 'gradient', btnText: '#000' };
+                case 'gold':
+                    return { bg: '#F2B441', text: '#000000', muted: 'rgba(0,0,0,0.6)', accent: '#000', btnText: '#F2B441' };
+                case 'coral':
+                    return { bg: '#F24968', text: '#000000', muted: 'rgba(0,0,0,0.6)', accent: '#000', btnText: '#F24968' };
+                case 'gradient':
+                    return { bg: 'linear-gradient(135deg, #F2B441, #F24968)', text: '#000000', muted: 'rgba(0,0,0,0.6)', accent: '#000', btnText: '#fff' };
+                case 'glass':
+                    return { bg: '#000000', text: '#ffffff', muted: 'rgba(255,255,255,0.65)', accent: 'gradient', btnText: '#000', glass: true };
+                case 'black':
+                default:
+                    return { bg: '#000000', text: '#ffffff', muted: 'rgba(255,255,255,0.65)', accent: 'gradient', btnText: '#000' };
+            }
+        }
+        
+        function renderTitleSlideHTML(slide, colors) {
+            const day = slide.day || '1';
+            const isLight = ['gold', 'coral', 'gradient'].includes(designStyle);
+            const badgeBg = colors.accent === 'gradient' ? 'linear-gradient(135deg, var(--gold), var(--coral-pink))' : colors.accent;
+            const badgeText = isLight ? 'white' : 'black';
+            
+            if (designStyle === 'glass') {
+                return `
+                    <div class="slide-content center">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; padding: 1.5rem; backdrop-filter: blur(10px);">
+                            <div class="slide-badge">AI JUNKIES ADVENT • DAY ${day}</div>
+                            <div class="slide-headline" style="margin-top: 0.75rem; color: ${colors.text};">${slide.headline}</div>
+                            <div class="slide-subhead" style="margin-top: 0.5rem; color: ${colors.muted};">${slide.subhead || ''}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="slide-content center">
+                    <div class="slide-badge" style="background: ${badgeBg}; color: ${badgeText};">AI JUNKIES ADVENT • DAY ${day}</div>
+                    <div class="slide-headline" style="color: ${colors.text};">${slide.headline}</div>
+                    <div class="slide-subhead" style="color: ${colors.muted};">${slide.subhead || ''}</div>
+                    <div class="slide-accent bottom" style="${isLight ? 'background: #000;' : ''}"></div>
+                </div>
+            `;
+        }
+        
+        function renderContentSlideHTML(slide, index, formattedBody, colors) {
+            const isLight = ['gold', 'coral', 'gradient'].includes(designStyle);
+            const accentStyle = isLight ? 'background: #000;' : '';
+            
+            if (designStyle === 'glass') {
+                return `
+                    <div class="slide-content center">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; padding: 1.25rem; width: 100%;">
+                            <div class="slide-headline bold" style="font-size: 0.875rem; color: ${colors.text};">${slide.headline}</div>
+                            <div class="slide-body" style="margin-top: 0.75rem; font-size: 0.7rem; color: ${colors.muted};">${formattedBody}</div>
+                        </div>
+                        <div class="slide-footer center slide-num" style="color: var(--warm-gray);">${index + 1}</div>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="slide-content left">
+                    <div class="slide-accent" style="${accentStyle}"></div>
+                    <div class="slide-headline bold" style="color: ${colors.text};">${slide.headline}</div>
+                    <div class="slide-body" style="color: ${colors.muted};">${formattedBody}</div>
+                    <div class="slide-footer right slide-num" style="color: ${isLight ? 'rgba(0,0,0,0.4)' : 'var(--warm-gray)'};">${index + 1}</div>
+                </div>
+            `;
+        }
+        
+        function renderCtaSlideHTML(slide, formattedBody, colors) {
+            const btnText = slide.cta || 'Learn more';
+            const isLight = ['gold', 'coral', 'gradient'].includes(designStyle);
+            const btnBg = isLight ? '#000' : 'linear-gradient(135deg, var(--gold), var(--coral-pink))';
+            const btnTextColor = isLight ? '#fff' : '#000';
+            
+            if (designStyle === 'glass') {
+                return `
+                    <div class="slide-content center">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; padding: 1.25rem;">
+                            <div class="slide-headline bold" style="font-size: 0.875rem; color: ${colors.text};">${slide.headline}</div>
+                            <div class="slide-body" style="margin: 0.75rem 0; font-size: 0.7rem; color: ${colors.muted};">${formattedBody}</div>
+                            <div class="slide-cta-btn">${btnText}</div>
+                        </div>
+                        <div class="slide-footer center" style="color: var(--warm-gray);">IDEA JUNKIES</div>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="slide-content center">
+                    <div class="slide-headline bold" style="color: ${colors.text};">${slide.headline}</div>
+                    <div class="slide-body" style="color: ${colors.muted};">${formattedBody}</div>
+                    <div class="slide-cta-btn" style="background: ${btnBg}; color: ${btnTextColor};">${btnText}</div>
+                    <div class="slide-footer center" style="color: ${isLight ? 'rgba(0,0,0,0.4)' : 'var(--warm-gray)'};">IDEA JUNKIES</div>
+                </div>
+            `;
+        }
+        
+        function renderPreviewThumb() {
+            const container = document.getElementById('preview-thumb');
+            if (slides.length > 0) {
+                renderSlideHTML(slides[0], 0, container);
+            }
+        }
+        
+        function renderSlideEditor() {
+            const mainPreview = document.getElementById('slide-preview-main');
+            renderSlideHTML(slides[currentSlide], currentSlide, mainPreview);
+            
+            // Update indicator
+            document.getElementById('slide-indicator').textContent = `${currentSlide + 1} / ${slides.length}`;
+            document.getElementById('edit-slide-num').textContent = currentSlide + 1;
+            
+            // Render thumbs
+            const thumbsContainer = document.getElementById('slide-thumbs');
+            thumbsContainer.innerHTML = slides.map((_, i) => 
+                `<div class="slide-thumb ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})">${i + 1}</div>`
+            ).join('');
+            
+            // Populate edit form
+            const slide = slides[currentSlide];
+            document.getElementById('edit-type').value = slide.type;
+            document.getElementById('edit-headline').value = slide.headline || '';
+            document.getElementById('edit-day').value = slide.day || '';
+            document.getElementById('edit-subhead').value = slide.subhead || '';
+            document.getElementById('edit-body').value = slide.body || '';
+            document.getElementById('edit-cta').value = slide.cta || '';
+            
+            // Show/hide fields based on type
+            updateEditFieldVisibility(slide.type);
+            
+            // Show/hide remove button
+            const canRemove = slides.length > 2 && currentSlide !== 0 && currentSlide !== slides.length - 1;
+            document.getElementById('btn-remove').style.display = canRemove ? 'block' : 'none';
+        }
+        
+        function updateEditFieldVisibility(type) {
+            document.getElementById('edit-day-group').style.display = type === 'title' ? 'block' : 'none';
+            document.getElementById('edit-subhead-group').style.display = type === 'title' ? 'block' : 'none';
+            document.getElementById('edit-body-group').style.display = type !== 'title' ? 'block' : 'none';
+            document.getElementById('edit-cta-group').style.display = type === 'cta' ? 'block' : 'none';
+        }
+        
+        function updateSlideType() {
+            slides[currentSlide].type = document.getElementById('edit-type').value;
+            updateEditFieldVisibility(slides[currentSlide].type);
+            renderSlideEditor();
+        }
+        
+        function updateSlideField(field) {
+            slides[currentSlide][field] = document.getElementById('edit-' + field).value;
+            renderSlideEditor();
+        }
+        
+        function goToSlide(index) {
+            currentSlide = index;
+            renderSlideEditor();
+        }
+        
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                renderSlideEditor();
+            }
+        }
+        
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                renderSlideEditor();
+            }
+        }
+        
+        function addSlide() {
+            const newSlide = { type: 'content', headline: 'New headline', body: 'Add content here' };
+            slides.splice(slides.length - 1, 0, newSlide);
+            currentSlide = slides.length - 2;
+            updateSlideCounts();
+            renderSlideEditor();
+        }
+        
+        function removeSlide() {
+            if (slides.length > 2 && currentSlide !== 0 && currentSlide !== slides.length - 1) {
+                slides.splice(currentSlide, 1);
+                if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+                updateSlideCounts();
+                renderSlideEditor();
+            }
+        }
+        
+        function updateSlideCounts() {
+            document.getElementById('slide-count').textContent = slides.length;
+            document.getElementById('slide-count-2').textContent = slides.length;
+        }
+        
+        function updateCharCount() {
+            const count = document.getElementById('post-copy').value.length;
+            document.getElementById('char-count').textContent = count;
+        }
+        
+        function updatePostPreview() {
+            const text = document.getElementById('post-copy').value;
+            const preview = text.length > 400 ? text.substring(0, 400) + '...' : text;
+            document.getElementById('post-preview-text').textContent = preview;
+            
+            const slidePreview = document.getElementById('post-slide-preview');
+            if (slides.length > 0) {
+                renderSlideHTML(slides[0], 0, slidePreview);
+            }
+        }
+        
+        function copyPost() {
+            navigator.clipboard.writeText(document.getElementById('post-copy').value);
+            alert('Copied to clipboard!');
+        }
+        
+        // Format text insertion
+        function insertFormat(before, after) {
+            const textarea = document.getElementById('edit-body');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+            
+            const newText = text.substring(0, start) + before + selectedText + after + text.substring(end);
+            textarea.value = newText;
+            
+            // Update cursor position
+            const newCursorPos = selectedText ? start + before.length + selectedText.length + after.length : start + before.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+            
+            updateSlideField('body');
+        }
+        
+        // Parse formatted text to HTML
+        function formatTextToHTML(text) {
+            if (!text) return '';
+            return text
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/__(.+?)__/g, '<u>$1</u>')
+                .replace(/^• /gm, '<span style="color: var(--gold);">•</span> ')
+                .replace(/\n/g, '<br>');
+        }
+        
+        // Parse formatted text segments for canvas rendering
+        function parseFormattedText(text) {
+            if (!text) return [];
+            
+            const segments = [];
+            const lines = text.split('\n');
+            
+            for (const line of lines) {
+                const lineSegments = [];
+                let remaining = line;
+                let isBullet = false;
+                
+                // Check for bullet
+                if (remaining.startsWith('• ')) {
+                    isBullet = true;
+                    remaining = remaining.substring(2);
+                }
+                
+                // Parse inline formatting
+                const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|__(.+?)__)/g;
+                let lastIndex = 0;
+                let match;
+                
+                while ((match = regex.exec(remaining)) !== null) {
+                    // Add text before match
+                    if (match.index > lastIndex) {
+                        lineSegments.push({ text: remaining.substring(lastIndex, match.index), style: 'normal' });
+                    }
+                    
+                    // Add formatted text
+                    if (match[2]) {
+                        lineSegments.push({ text: match[2], style: 'bold' });
+                    } else if (match[3]) {
+                        lineSegments.push({ text: match[3], style: 'italic' });
+                    } else if (match[4]) {
+                        lineSegments.push({ text: match[4], style: 'underline' });
+                    }
+                    
+                    lastIndex = regex.lastIndex;
+                }
+                
+                // Add remaining text
+                if (lastIndex < remaining.length) {
+                    lineSegments.push({ text: remaining.substring(lastIndex), style: 'normal' });
+                }
+                
+                if (lineSegments.length === 0 && remaining) {
+                    lineSegments.push({ text: remaining, style: 'normal' });
+                }
+                
+                segments.push({ isBullet, segments: lineSegments });
+            }
+            
+            return segments;
+        }
+        
+        // Canvas rendering for PDF
+        function drawRoundedRect(ctx, x, y, width, height, radius) {
+            radius = Math.min(radius, width / 2, height / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight, align = 'center') {
+            if (!text) return y;
+            ctx.textAlign = align;
+            let currentY = y;
+            for (const paragraph of text.split('\n')) {
+                const words = paragraph.split(' ');
+                let line = '';
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                        ctx.fillText(line.trim(), x, currentY);
+                        line = words[n] + ' ';
+                        currentY += lineHeight;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                ctx.fillText(line.trim(), x, currentY);
+                currentY += lineHeight;
+            }
+            return currentY;
+        }
+        
+        // Render formatted text on canvas
+        function renderFormattedText(ctx, text, x, y, maxWidth, lineHeight, align, baseFont, color) {
+            if (!text) return y;
+            
+            const parsedLines = parseFormattedText(text);
+            let currentY = y;
+            ctx.textAlign = align;
+            
+            for (const lineData of parsedLines) {
+                let lineX = x;
+                
+                // Draw bullet if present
+                if (lineData.isBullet) {
+                    ctx.fillStyle = BRAND.gold;
+                    ctx.font = baseFont;
+                    ctx.fillText('•', lineX, currentY);
+                    lineX += ctx.measureText('• ').width;
+                    ctx.fillStyle = color;
+                }
+                
+                // Calculate total line width for wrapping
+                let totalWidth = 0;
+                const segmentWidths = [];
+                
+                for (const seg of lineData.segments) {
+                    ctx.font = getStyledFont(baseFont, seg.style);
+                    const width = ctx.measureText(seg.text).width;
+                    segmentWidths.push(width);
+                    totalWidth += width;
+                }
+                
+                // Simple wrapping - if line too long, break into multiple lines
+                // (For now, just render and let it overflow - full word-wrap with formatting is complex)
+                let segIndex = 0;
+                for (const seg of lineData.segments) {
+                    ctx.font = getStyledFont(baseFont, seg.style);
+                    ctx.fillStyle = color;
+                    
+                    if (seg.style === 'underline') {
+                        // Draw text then underline
+                        ctx.fillText(seg.text, lineX, currentY);
+                        const textWidth = ctx.measureText(seg.text).width;
+                        ctx.fillRect(lineX, currentY + 4, textWidth, 2);
+                    } else {
+                        ctx.fillText(seg.text, lineX, currentY);
+                    }
+                    
+                    lineX += segmentWidths[segIndex];
+                    segIndex++;
+                }
+                
+                currentY += lineHeight;
+            }
+            
+            return currentY;
+        }
+        
+        function getStyledFont(baseFont, style) {
+            // Parse base font to extract size and family
+            const match = baseFont.match(/(\d+)px\s+(.+)/);
+            if (!match) return baseFont;
+            
+            const size = match[1];
+            const family = match[2];
+            
+            switch (style) {
+                case 'bold':
+                    return `bold ${size}px ${family}`;
+                case 'italic':
+                    return `italic ${size}px ${family}`;
+                case 'underline':
+                    return `${size}px ${family}`; // underline handled separately
+                default:
+                    return baseFont;
+            }
+        }
+        
+        function renderSlideToCanvas(ctx, slide, index, width, height) {
+            const isLight = ['gold', 'coral', 'gradient'].includes(designStyle);
+            
+            // Background based on design style
+            if (designStyle === 'gradient') {
+                const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+                bgGrad.addColorStop(0, BRAND.gold);
+                bgGrad.addColorStop(1, BRAND.coralPink);
+                ctx.fillStyle = bgGrad;
+            } else if (designStyle === 'gold') {
+                ctx.fillStyle = BRAND.gold;
+            } else if (designStyle === 'coral') {
+                ctx.fillStyle = BRAND.coralPink;
+            } else if (designStyle === 'charcoal') {
+                ctx.fillStyle = '#2c3e50';
+            } else {
+                ctx.fillStyle = BRAND.black;
+            }
+            ctx.fillRect(0, 0, width, height);
+            
+            // Subtle overlay for dark backgrounds only
+            if (!isLight) {
+                const gradient = ctx.createRadialGradient(width * 0.8, 0, 0, width * 0.8, 0, width * 0.6);
+                gradient.addColorStop(0, BRAND.coralPink + '18');
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            const accentGrad = (x1, x2) => {
+                if (isLight) return BRAND.black;
+                const g = ctx.createLinearGradient(x1, 0, x2, 0);
+                g.addColorStop(0, BRAND.gold);
+                g.addColorStop(1, BRAND.coralPink);
+                return g;
+            };
+            
+            const textColor = isLight ? BRAND.black : BRAND.white;
+            const mutedColor = isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)';
+            const footerColor = isLight ? 'rgba(0,0,0,0.4)' : BRAND.warmGray;
+
+            if (slide.type === 'title') {
+                ctx.textAlign = 'center';
+                const day = slide.day || '1';
+                
+                // Glass panel if glass style
+                if (designStyle === 'glass') {
+                    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+                    drawRoundedRect(ctx, 100, 380, width - 200, 400, 30);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                
+                // Badge
+                const badgeText = `AI JUNKIES ADVENT • DAY ${day}`;
+                ctx.font = 'bold 22px Arial';
+                const badgeWidth = ctx.measureText(badgeText).width + 60;
+                
+                if (isLight) {
+                    ctx.fillStyle = BRAND.black;
+                } else {
+                    const badgeGrad = ctx.createLinearGradient(width/2 - badgeWidth/2, 0, width/2 + badgeWidth/2, 0);
+                    badgeGrad.addColorStop(0, BRAND.gold);
+                    badgeGrad.addColorStop(1, BRAND.coralPink);
+                    ctx.fillStyle = badgeGrad;
+                }
+                drawRoundedRect(ctx, width/2 - badgeWidth/2, designStyle === 'glass' ? 430 : 400, badgeWidth, 55, 28);
+                ctx.fillStyle = isLight ? BRAND.white : BRAND.black;
+                ctx.fillText(badgeText, width/2, designStyle === 'glass' ? 465 : 435);
+                
+                // Headline
+                ctx.fillStyle = textColor;
+                ctx.font = '300 60px Arial';
+                wrapText(ctx, slide.headline, width/2, designStyle === 'glass' ? 560 : 560, width - 200, 72, 'center');
+                
+                // Subhead
+                ctx.fillStyle = mutedColor;
+                ctx.font = '400 32px Arial';
+                ctx.fillText(slide.subhead || '', width/2, designStyle === 'glass' ? 700 : 780);
+                
+                // Bottom accent (not for glass)
+                if (designStyle !== 'glass') {
+                    ctx.fillStyle = accentGrad(width/2 - 40, width/2 + 40);
+                    drawRoundedRect(ctx, width/2 - 40, height - 100, 80, 6, 3);
+                }
+                
+            } else if (slide.type === 'cta') {
+                ctx.textAlign = 'center';
+                
+                // Glass panel if glass style
+                if (designStyle === 'glass') {
+                    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+                    drawRoundedRect(ctx, 100, 320, width - 200, 520, 30);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                
+                // Headline
+                ctx.fillStyle = textColor;
+                ctx.font = '600 52px Arial';
+                wrapText(ctx, slide.headline, width/2, designStyle === 'glass' ? 420 : 420, width - 200, 65, 'center');
+                
+                // Body
+                renderFormattedText(ctx, slide.body || '', width/2, designStyle === 'glass' ? 540 : 580, width - 200, 48, 'center', '400 36px Arial', mutedColor);
+                
+                // Button
+                const btnText = slide.cta || 'Learn more';
+                ctx.font = 'bold 32px Arial';
+                const btnWidth = ctx.measureText(btnText).width + 80;
+                
+                if (isLight) {
+                    ctx.fillStyle = BRAND.black;
+                } else {
+                    const btnGrad = ctx.createLinearGradient(width/2 - btnWidth/2, 0, width/2 + btnWidth/2, 0);
+                    btnGrad.addColorStop(0, BRAND.gold);
+                    btnGrad.addColorStop(1, BRAND.coralPink);
+                    ctx.fillStyle = btnGrad;
+                }
+                drawRoundedRect(ctx, width/2 - btnWidth/2, designStyle === 'glass' ? 720 : 780, btnWidth, 75, 38);
+                ctx.fillStyle = isLight ? BRAND.white : BRAND.black;
+                ctx.textAlign = 'center';
+                ctx.fillText(btnText, width/2, designStyle === 'glass' ? 765 : 825);
+                
+                // Footer
+                ctx.fillStyle = footerColor;
+                ctx.font = '600 20px Arial';
+                ctx.fillText('IDEA JUNKIES', width/2, height - 50);
+                
+            } else {
+                // Content slides
+                
+                if (designStyle === 'glass') {
+                    // Glass panel
+                    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+                    drawRoundedRect(ctx, 80, 350, width - 160, 550, 30);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.textAlign = 'left';
+                    
+                    // Headline
+                    ctx.fillStyle = textColor;
+                    ctx.font = '600 48px Arial';
+                    const headlineEnd = wrapText(ctx, slide.headline, 130, 450, width - 260, 58, 'left');
+                    
+                    // Body
+                    if (slide.body) {
+                        renderFormattedText(ctx, slide.body, 130, headlineEnd + 40, width - 260, 48, 'left', '400 36px Arial', mutedColor);
+                    }
+                    
+                    // Slide number
+                    ctx.fillStyle = footerColor;
+                    ctx.font = '500 28px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${index + 1}`, width/2, height - 50);
+                } else {
+                    ctx.textAlign = 'left';
+                    
+                    // Accent line
+                    ctx.fillStyle = accentGrad(80, 180);
+                    drawRoundedRect(ctx, 80, 400, 100, 6, 3);
+                    
+                    // Headline
+                    ctx.fillStyle = textColor;
+                    ctx.font = '600 52px Arial';
+                    const headlineEnd = wrapText(ctx, slide.headline, 80, 500, width - 160, 65, 'left');
+                    
+                    // Body
+                    if (slide.body) {
+                        renderFormattedText(ctx, slide.body, 80, headlineEnd + 50, width - 160, 52, 'left', '400 38px Arial', mutedColor);
+                    }
+                    
+                    // Slide number
+                    ctx.fillStyle = footerColor;
+                    ctx.font = '500 28px Arial';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(`${index + 1}`, width - 60, height - 50);
+                }
+            }
+        }
+        
+        async function downloadPDF() {
+            const statusEl = document.getElementById('download-status');
+            statusEl.textContent = 'Generating PDF...';
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const width = 1080;
+                const height = 1350;
+                canvas.width = width;
+                canvas.height = height;
+                
+                // PDF dimensions in mm (roughly A4-ish but 4:5 ratio)
+                const pdfWidth = 216;
+                const pdfHeight = 270;
+                
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: [pdfWidth, pdfHeight]
+                });
+                
+                for (let i = 0; i < slides.length; i++) {
+                    statusEl.textContent = `Rendering slide ${i + 1} of ${slides.length}...`;
+                    
+                    renderSlideToCanvas(ctx, slides[i], i, width, height);
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    
+                    if (i > 0) pdf.addPage([pdfWidth, pdfHeight]);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                }
+                
+                const day = document.getElementById('input-day').value;
+                pdf.save(`ai-junkies-advent-day-${day}.pdf`);
+                
+                statusEl.textContent = 'Download complete!';
+                setTimeout(() => statusEl.textContent = '', 3000);
+                
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
